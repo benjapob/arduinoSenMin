@@ -1,7 +1,7 @@
 //Variable donde almacenaremos el valor del potenciometro
 #include <MQ2.h>
 int valor;
-int valor2;
+int valorSulf;
 MQ2 mq2(A5);
  
 void setup() {
@@ -17,14 +17,27 @@ void setup() {
  
 void loop() {
 
+  calculoSulf();
+
   calculoAzufre();
 
   calculoGas();
 
-
-
   delay(1000);
  
+}
+
+void calculoSulf(){
+// leemos del pin A0 valor
+  valorSulf = analogRead(A1);
+ 
+  //Imprimimos por el monitor serie
+  int acidoSulf;
+
+  acidoSulf = map(valor, 0, 1023, -14, 106 ); //2 - 5 Normal 5 - 20 Advertencia 20 - 100 Peligro
+  Serial.println("Medicion de ácido sulfhídrico: ");
+  Serial.println(acidoSulf);
+
 }
 
 void calculoAzufre(){
@@ -34,7 +47,7 @@ void calculoAzufre(){
   //Imprimimos por el monitor serie
   int azufre;
 
-  azufre = map(valor, 0, 1023, 0, 100 );
+  azufre = map(valor, 0, 1023, -14, 206 ); //0.5 - 2 Normal 2 - 99 Advertencia 99 - 200 Peligro
   Serial.println("Medicion de azufre: ");
   Serial.println(azufre);
 
