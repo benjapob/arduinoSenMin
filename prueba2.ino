@@ -3,8 +3,8 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <OneWire.h> 
-int valor;
-int valorSulf;
+float valorAzufre;
+float valorSulf;
 int DS18S20_Pin = 2;
 OneWire ds(DS18S20_Pin);  // on digital pin 2
 MQ2 mq2(A5);
@@ -12,7 +12,7 @@ MQ2 mq2(A5);
 // Registrar la Mac para su proyecto.
 // Ingrese la MAC de su shell, para obtenerla, puede acceder a: Archivo->Ejemplos->Ethernet->DhcpAdressPrinter.
 byte mac[] = { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
-char serverName[] = "10.58.33.32";    // name address of your domain
+char serverName[] = "10.58.16.220";    // name address of your domain
 
 // Esta IP se asignará en caso de que el DHCP falle en asignar la ip al servidor
 IPAddress ip(192,168,0,177);
@@ -50,27 +50,19 @@ void setup() {
   digitalWrite(10,HIGH);
 
   Serial.println(Ethernet.localIP());
-
-  delay(2000);
   Serial.println(F("Listo"));
  
 }
  
 void loop() {
 
-  thisMillis = millis();
-
-  if(thisMillis - lastMillis > delayMillis)
-  {
-    lastMillis = thisMillis;
-
   calculoSulf();
 
-  //calculoAzufre();
+  calculoAzufre();
 
-  //calculoGas();
+  calculoGas();
 
-  }  
+  delay(2000);
  
 }
 
@@ -79,15 +71,15 @@ void calculoSulf(){
   valorSulf = analogRead(A1);
  
   //Imprimimos por el monitor serie
-  int acidoSulf;
+  float acidoSulf;
 
-  acidoSulf = map(valorSulf, 0, 1023, -14, 106 ); //2 - 5 Normal 5 - 20 Advertencia 20 - 100 Peligro
+  acidoSulf = map(valorSulf, 0, 1023, 0, 100 ); //2 - 5 Normal 5 - 20 Advertencia 20 - 100 Peligro
   Serial.println("Medicion de ácido sulfhídrico: ");
   //Al método ftoa, se le envía el arreglo llamado tempString, el valor del sensor, cantidad de decimales
   Serial.println(ftoa(tempString,acidoSulf,0));
   //Se envian los datos a las API creadas en el servidor, asegurandose de que los datos sean los mismos que recibirá la página php
   //en la variable $arduino_data = $_GET['data_temperatura']; por ejemplo.
-  sprintf(pageAdd,"/arduino/gas.php?gasValor=%s",ftoa(tempString,acidoSulf,0));
+  sprintf(pageAdd,"/arduino/acidoSulf.php?acidoSulfValor=%s",ftoa(tempString,acidoSulf,0));
 
   if(!getPage(serverName,serverPort,pageAdd)) Serial.print(F("Falla"));
   else Serial.print(F("OK "));
@@ -97,27 +89,43 @@ void calculoSulf(){
 }
 
 void calculoAzufre(){
+  
 // leemos del pin A0 valor
-  valor = analogRead(A0);
+  valorAzufre = analogRead(A0);
  
   //Imprimimos por el monitor serie
-  int azufre;
+  float azufre;
 
-  azufre = map(valor, 0, 1023, -14, 206 ); //0.5 - 2 Normal 2 - 99 Advertencia 99 - 200 Peligro
-  Serial.println("Medicion de azufre: ");
-  Serial.println(azufre);
+  azufre = map(valorAzufre, 0, 1023, 0, 200 ); //2 - 5 Normal 5 - 20 Advertencia 20 - 100 Peligro
+  Serial.println("Medicion de dióxido de azufre: ");
+  //Al método ftoa, se le envía el arreglo llamado tempString, el valor del sensor, cantidad de decimales
+  Serial.println(ftoa(tempString,azufre,0));
+  //Se envian los datos a las API creadas en el servidor, asegurandose de que los datos sean los mismos que recibirá la página php
+  //en la variable $arduino_data = $_GET['data_temperatura']; por ejemplo.
+  sprintf(pageAdd,"/arduino/azufre.php?azufreValor=%s",ftoa(tempString,azufre,0));
+
+  if(!getPage(serverName,serverPort,pageAdd)) Serial.print(F("Falla"));
+  else Serial.print(F("OK "));
+  totalCount++;
+  Serial.println(totalCount,DEC);
 
 }
 
-void calculoGas(){
+void calculoGas(){ 
+
 // leemos del pin A5 valor
   float gas = mq2.readLPG();
- 
-  //Imprimimos por el monitor serie
-  //gas = map(valor2, 0, 1023, 65, 255 );
-
   Serial.println("Medicion de gas: ");
-  Serial.println(gas);
+  //Al método ftoa, se le envía el arreglo llamado tempString, el valor del sensor, cantidad de decimales
+  Serial.println(ftoa(tempString,gas,0));
+  //Se envian los datos a las API creadas en el servidor, asegurandose de que los datos sean los mismos que recibirá la página php
+  //en la variable $arduino_data = $_GET['data_temperatura']; por ejemplo.
+  sprintf(pageAdd,"/arduino/gas.php?gasValor=%s",ftoa(tempString,gas,0));
+
+  if(!getPage(serverName,serverPort,pageAdd)) Serial.print(F("Falla"));
+  else Serial.print(F("OK "));
+  totalCount++;
+  Serial.println(totalCount,DEC);
 
 }
 
